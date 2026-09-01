@@ -11,7 +11,8 @@ The repository consists of a small set of standalone Python scripts for:
 
 All scripts are self-contained and rely on `requirements.txt` for environment setup.
 
----
+# Data availability
+Data and model weights are available [here](https://doi.org/10.5281/zenodo.21996433). 
 
 # Installation
 
