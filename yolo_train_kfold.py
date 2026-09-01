@@ -2,10 +2,6 @@
 5-fold cross-validation over the full model-size x resolution grid, using stock
 Ultralytics augmentation.
 
-Nothing is customised: no callbacks, no torchvision pipeline, no augmentation
-arguments passed to train(). Whatever the installed Ultralytics version does by
-default for a -cls task is what runs here.
-
 Per fold:
     test  = the held-out fold        (never trained on, never used to pick best.pt)
     val   = 10% of the remainder     (used only for checkpoint selection)
@@ -36,28 +32,19 @@ from ultralytics import YOLO
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
-# SRC = Path(r"C:\Users\cvmbrl\Desktop\pupae_sexing")
-SRC = Path(r"C:\Users\cvmbrl\Desktop\adult_beetle_single_image")
-# SRC = Path(r"C:\Users\cvmbrl\Desktop\pupae_side")
-# SRC = Path(r"C:\Users\cvmbrl\Desktop\pupae_back_side")
-WORK = Path(r"C:\Users\cvmbrl\Desktop\cv_work_beetle")      # fold folders, deleted after use
-
-# PROJECT = r"C:\Users\cvmbrl\yolov8\runs\pupae-back-rotation-translation"
-PROJECT = r"C:\Users\cvmbrl\Desktop\adult_beetle_single_image-rotation-translation"
-
-# PROJECT = r"C:\Users\cvmbrl\yolov8\runs\pupae-side-kfold"
-# PROJECT = r"C:\Users\cvmbrl\yolov8\runs\pupae-back-side-kfold"
+SRC = Path()    # PATH_TO_YOUR_DATA
+WORK = Path()   # PATH_TO_WORKDIR, deleted after use
+PROJECT = ""    # PATH_TO_YOUR_PROJECT
 
 CLASSES = ["female", "male"]     # sorted folder order: female = 0, male = 1
 K = 5
-MAX_FOLDS = None                 # None = all K folds; set to 1 for a smoke test
+MAX_FOLDS = None                 # None = all K folds; set to 1 for a test
 EPOCHS = 200
-PATIENCE = 100                    # matches the original args.yaml; stock default is 100
+PATIENCE = 100
 BATCH = 16
 SEED = 0
 VAL_FRACTION = 0.1               # slice off the remainder, for best.pt selection only
 
-# The grid. Trim either list for a shorter first pass — e.g. RESOLUTIONS = [640].
 # Cheapest cells run first so partial results arrive early.
 NAMES = ["nano", "small", "medium", "large", "x-large"]
 SHORT = ["yolov8n", "yolov8s", "yolov8m", "yolov8l", "yolov8x"]
@@ -71,7 +58,8 @@ DEGREES = 180              # ±180 covers the full 360°
 TRANSLATE = (0.1, 0.1)     # fraction of width/height
 
 def add_geometry(trainer):
-    """Insert rotation + translation ahead of the stock classification chain.
+    """ Ultralytics does not provide rotation/translation by default. 
+    Insert rotation + translation ahead of the stock classification chain.
     Runs on PIL images before RandomResizedCrop, so the resize absorbs any
     resampling artefacts. fill=0 matches the segmented black background."""
     tf = trainer.train_loader.dataset.torch_transforms

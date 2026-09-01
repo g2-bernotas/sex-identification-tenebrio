@@ -3,39 +3,6 @@ Eigen-CAM over the full YOLOv8-cls grid (5 model sizes x 5 resolutions),
 using fold-aware checkpoint selection so every CAM is computed by a model
 that never saw that image.
 
-WHY FOLD-AWARE
---------------
-The k-fold script trained 5 folds per (model, resolution) config, and every one
-of the 342 images was in the training set for 4 of those 5 folds. Loading a
-single "best" checkpoint would therefore produce CAMs from a model that had
-memorised most of the images you look at.
-
-StratifiedKFold(n_splits=5, shuffle=True, random_state=0) over the same file
-list produces the SAME split for every config, so each image has one fold index
-that held it out. This script recomputes that mapping and, for image X at
-config (model, res), loads:
-
-    PROJECT/paper-adult-beetle-single-{res}px-{model}-model-f{fold(X)}/weights/best.pt
-
-If predictions.csv from the k-fold run is present, the mapping is cross-checked
-against it and the script aborts on any mismatch.
-
-DIFFERENCES FROM THE PREVIOUS EIGEN-CAM SCRIPT
-----------------------------------------------
-1. Input transform. The old script did `img.resize((640, 640))`, a plain
-   stretch. Your models were trained and validated with PadSquare -> Resize
-   (see val_tf in the k-fold script), so the old CAM input was distorted
-   relative to everything the model was scored on. This script reuses val_tf
-   exactly, including USE_IMAGENET_NORM = False.
-2. The model is called directly (model.model), not through YOLO.predict(), for
-   the same reason predict_fold() does: the Ultralytics classification
-   predictor applies its own Resize + CenterCrop, which is what PadSquare
-   avoids.
-3. The old inner `for i in range(2)` loop computed the CAM twice and wrote only
-   the second overlay; removed.
-4. `img_path.split(".")[0]` breaks on any path containing a dot; uses
-   Path.stem now.
-
 The Eigen-CAM maths is identical to yolo_cam / pytorch-grad-cam: hook the
 target layer, reshape activations to (HW, C), mean-centre, SVD, project onto
 the first right singular vector, min-max normalise, resize. Set
@@ -74,20 +41,11 @@ from ultralytics import YOLO
 # ----------------------------------------------------------------------------
 # Configuration  (paths lifted from the k-fold script)
 # ----------------------------------------------------------------------------
-# SRC = Path(r"C:\Users\Gytis\Desktop\adult_beetle_single_image")
-# PROJECT = Path(r"C:\Users\Gytis\yolov7\runs\v8-kfold")
-# OUT = PROJECT / "eigencam"
+SRC = Path("")              # YOUR_DATA_PATH
+PROJECT = Path("")          # YOUR_PROJECT_PATH
+OUT = PROJECT / "eigencam"
 
-SRC = Path(r"C:\Users\cvmbrl\Desktop\pupae_sexing")
-# SRC = Path(r"C:\Users\cvmbrl\Desktop\adult_beetle_single_image")
-
-PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-back-kfold")
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\adult-kfold")
-
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-back-side-kfold")
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-side-kfold")
-
-OUT = PROJECT / "eigencam_pupae"
+YOLO_CAM_PATH = r"./YOLO-V8-CAM-main"
 
 CLASSES = ["female", "male"]          # sorted order: female = 0, male = 1
 K = 5
@@ -128,20 +86,16 @@ COLORMAP = cv2.COLORMAP_HOT
 ALPHA_IMG = 0.6
 ALPHA_CAM = 0.6
 
-# Subset controls. Leave both at their defaults to process all 342 images
-# (342 x 25 x len(TARGET_LAYERS) CAMs).
-ONLY_STEMS = []          # e.g. ["7336542904092_cam0"] to do a single insect
-MAX_PER_CLASS = None     # e.g. 20 for a quick look before committing
+ONLY_STEMS = []          
+MAX_PER_CLASS = None     # e.g. 20 for a quick look
 
 # One progress bar over the whole job instead of a line per fold. Set False for
 # the old per-fold "[done] ..." logging, e.g. if you are piping to a file.
 PROGRESS_BAR = True
 
 VERIFY_AGAINST_YOLO_CAM = False
-YOLO_CAM_PATH = r"C:\Users\cvmbrl\Desktop\pupae_sexing\YOLO-V8-CAM-main"
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-
 
 # ----------------------------------------------------------------------------
 # Progress bar

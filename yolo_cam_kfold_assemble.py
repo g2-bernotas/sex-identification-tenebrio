@@ -6,25 +6,17 @@ Assemble the per-insect 5x5 Eigen-CAM grid.
 
 Reads the panels written by eigencam_generate.py and produces, per insect:
 
-    grids/layer-2/<stem>_grid.pdf      publication figure, no annotation
-    grids/layer-2/<stem>_grid_preview.png   same but annotated with the
-                                            prediction in each cell, for
-                                            quickly picking the best insect
+    grids/layer-2/<stem>_grid.pdf     
+    grids/layer-2/<stem>_grid_preview.png
 
-EDITING ONE OF THE 25 PANELS
+
 ----------------------------
-The PDF is a vector container: each panel is a separate embedded image object,
-so in Illustrator / Inkscape / Affinity you can click a single cell, delete it
-and place a replacement without touching the other 24. Text (row and column
-labels) is written as editable TrueType, not outlines, via pdf.fonttype = 42.
 
 The individual panel PNGs that back each cell are already on disk at
 DISPLAY_SIZE px (1024 by default) under
     <OUT>/layer-2/<stem>/<model>_<res>px.png
-so you can re-edit or replace any single cell directly.
 
-Set FORMATS = ["pdf", "eps", "svg"] if you also want those. EPS carries no
-transparency and is legacy, but Illustrator opens it fine.
+Set FORMATS = ["pdf", "eps", "svg"] if you also want those.
 """
 
 import csv
@@ -44,16 +36,7 @@ matplotlib.rcParams["svg.fonttype"] = "none"
 # ----------------------------------------------------------------------------
 # Configuration — must match eigencam_generate.py
 # ----------------------------------------------------------------------------
-# PROJECT = Path(r"C:\Users\Gytis\yolov7\runs\v8-kfold")
-
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-back-kfold") # done
-
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-back-side-kfold")
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-side-kfold")
-# PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\adult-kfold")
-
-PROJECT = Path(r"C:\Users\cvmbrl\yolov8\runs\pupae-back-kfold")
-
+PROJECT = Path(r"") # PATH_TO_EIGEN_IMAGES
 
 OUT = PROJECT / "eigencam"
 GRIDS = OUT / "grids"
@@ -62,11 +45,10 @@ MODELS = ["nano", "small", "medium", "large", "x-large"]
 RESOLUTIONS = [64, 128, 256, 512, 640]
 LAYERS = (-3, -2)
 
-FORMATS = ["pdf"]        # add "eps" / "svg" if you want them too
-PANEL_INCHES = 1.7       # per cell; 5 cells -> ~8.5 in wide, journal page width
+FORMATS = ["pdf"]
+PANEL_INCHES = 1.7
 PREVIEW_DPI = 130
-ONLY_STEMS = []          # empty = every insect found under OUT/layer*/
-
+ONLY_STEMS = []
 
 # ----------------------------------------------------------------------------
 
